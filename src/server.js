@@ -8,13 +8,13 @@ const port = 3000;
 app.use(bodyParser.json());
 
 // Inicializar o cliente Oracle
-oracledb.initOracleClient({ libDir: 'C:\\instantclient_21_13' });
+oracledb.initOracleClient({ libDir: process.env.LIB_DIR });
 
 // Configuração do banco de dados
 const dbConfig = {
-  user: 'CLIENTES_CNPJ_NOVO',
-  password: 'D_d2017',
-  connectString: '127.0.0.1:1521/XE'
+  user: process.env.DB_USER,
+  password: process.env.DB_PASSWORD,
+  connectString: process.env.DB_CONNECT_STRING
 };
 
 // Rota para o SELECT
