@@ -4,7 +4,7 @@ const oracledb = require('oracledb');
 const os = require('os');
 
 const app = express();
-const port = 3000;
+const port = 3333;
 
 app.use(bodyParser.json());
 
