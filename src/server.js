@@ -3,18 +3,18 @@ const bodyParser = require('body-parser');
 const oracledb = require('oracledb');
 
 const app = express();
-const port = 3000;
+const port = process.env.PORT || 3000;
 
 app.use(bodyParser.json());
 
 // Inicializar o cliente Oracle
-oracledb.initOracleClient({ libDir: process.env.LIB_DIR });
+oracledb.initOracleClient({ libDir: 'C:\\instantclient_21_13' });
 
 // Configuração do banco de dados
 const dbConfig = {
-  user: process.env.DB_USER,
-  password: process.env.DB_PASSWORD,
-  connectString: process.env.DB_CONNECT_STRING
+  user: 'CLIENTES_CNPJ_NOVO',
+  password: 'D_d2017',
+  connectString: '127.0.0.1:1521/XE'
 };
 
 // Rota para o SELECT
@@ -47,7 +47,7 @@ app.post('/notasteste2', async (req, res) => {
     console.error('Erro durante a execução:', err);
     res.status(500).json({ error: err.message });
   }
-});
+}); 
 
 app.listen(port, () => {
   console.log(`Servidor rodando na porta ${port}`);
