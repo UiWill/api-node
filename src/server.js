@@ -1,14 +1,26 @@
 const express = require('express');
 const bodyParser = require('body-parser');
 const oracledb = require('oracledb');
+const os = require('os');
 
 const app = express();
 const port = 3000;
 
 app.use(bodyParser.json());
 
+// Obter o caminho do Oracle Instant Client com base no sistema operacional
+let libDir = '';
+if (os.platform() === 'win32') {
+  libDir = 'C:\\instantclient_21_13';
+} else if (os.platform() === 'linux') {
+  libDir = '/opt/oracle/instantclient_21_14';
+} else {
+  console.error('Sistema operacional não suportado');
+  process.exit(1);
+}
+
 // Inicializar o cliente Oracle
-oracledb.initOracleClient({ libDir: 'C:\\instantclient_21_13' });
+oracledb.initOracleClient({ libDir });
 
 // Configuração do banco de dados
 const dbConfig = {
