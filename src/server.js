@@ -44,11 +44,27 @@ app.post('/notasteste2', async (req, res) => {
     let connection = await oracledb.getConnection(dbConfig);
     console.log('Conexão com o banco de dados estabelecida com sucesso.');
 
+    // Verificar e converter valores numéricos
+    const id = parseInt(valor1, 10);
+    const valor = parseFloat(valor5);
+
+    console.log(`ID convertido: ${id}`);
+    console.log(`VALOR convertido: ${valor}`);
+
     // Inicia uma transação
     await connection.execute('BEGIN');
 
-    const sqlInsertPedido = `INSERT INTO PEDIDO_PAG_SIMPLES (ID, MODOPAGAMENTO, PARCELAS, DATAFULL, VALOR, CAUT_YA07, TBAND_YA06, CNPJ_YA05) VALUES (:valor1, :valor2, :valor3, :valor4, :valor5, :valor6, :valor7, :valor8)`;
-    let bindsPedido = { valor1, valor2, valor3, valor4, valor5, valor6, valor7, valor8 };
+    const sqlInsertPedido = `INSERT INTO PEDIDO_PAG_SIMPLES (ID, MODOPAGAMENTO, PARCELAS, DATAFULL, VALOR, CAUT_YA07, TBAND_YA06, CNPJ_YA05) VALUES (:id, :modopagamento, :parcelas, :datafull, :valor, :caut_ya07, :tband_ya06, :cnpj_ya05)`;
+    let bindsPedido = { 
+      id: id, 
+      modopagamento: valor2, 
+      parcelas: valor3, 
+      datafull: valor4, 
+      valor: valor, 
+      caut_ya07: valor6, 
+      tband_ya06: valor7, 
+      cnpj_ya05: valor8 
+    };
     const options = { autoCommit: false, outFormat: oracledb.OUT_FORMAT_OBJECT };
 
     await connection.execute(sqlInsertPedido, bindsPedido, options);
@@ -56,7 +72,14 @@ app.post('/notasteste2', async (req, res) => {
 
     const sqlInsertItens = `INSERT INTO ITENS (ID, ITEM, QTD) VALUES (:id, :item, :qtd)`;
     for (const item of itens) {
-      let bindsItem = { id: valor1, item: item.item, qtd: item.qtd };
+      const itemQTD = parseInt(item.qtd, 10);
+      console.log(`Item: ${item.item}, QTD: ${itemQTD}`);
+
+      let bindsItem = { 
+        id: id, 
+        item: item.item, 
+        qtd: itemQTD 
+      };
       await connection.execute(sqlInsertItens, bindsItem, options);
     }
     console.log('Inserção em ITENS realizada com sucesso.');
