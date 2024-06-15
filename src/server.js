@@ -38,10 +38,12 @@ app.get("/", (req, res) => {
 app.post('/notasteste2', async (req, res) => {
   const { valor1, valor2, valor3, valor4, valor5, valor6, valor7, valor8, itens } = req.body;
 
+  let connection;
+
   try {
     console.log('Recebido POST /notasteste2 com dados:', req.body);
 
-    let connection = await oracledb.getConnection(dbConfig);
+    connection = await oracledb.getConnection(dbConfig);
     console.log('Conexão com o banco de dados estabelecida com sucesso.');
 
     // Verificar e converter valores numéricos
@@ -67,6 +69,7 @@ app.post('/notasteste2', async (req, res) => {
     };
     const options = { autoCommit: false, outFormat: oracledb.OUT_FORMAT_OBJECT };
 
+    console.log('Binds para PEDIDO_PAG_SIMPLES:', bindsPedido);
     await connection.execute(sqlInsertPedido, bindsPedido, options);
     console.log('Inserção em PEDIDO_PAG_SIMPLES realizada com sucesso.');
 
@@ -80,6 +83,7 @@ app.post('/notasteste2', async (req, res) => {
         item: item.item, 
         qtd: itemQTD 
       };
+      console.log('Binds para ITENS:', bindsItem);
       await connection.execute(sqlInsertItens, bindsItem, options);
     }
     console.log('Inserção em ITENS realizada com sucesso.');
