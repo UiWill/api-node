@@ -36,7 +36,7 @@ app.get("/", (req, res) => {
 
 // Rota para o INSERT
 app.post('/notasteste2', async (req, res) => {
-  const { valor1, valor2, valor3, valor4, valor5, valor6, valor7, valor8, itens2, itens3 } = req.body;
+  const { valor1, valor2, valor3, valor4, valor5, valor6, valor7, valor8, itens } = req.body;
 
   try {
     console.log('Recebido POST /notasteste2 com dados:', req.body);
@@ -54,9 +54,9 @@ app.post('/notasteste2', async (req, res) => {
     await connection.execute(sqlInsertPedido, bindsPedido, options);
     console.log('Inserção em PEDIDO_PAG_SIMPLES realizada com sucesso.');
 
-    const sqlInsertItens = `INSERT INTO ITENS (ID, ITEM, QTD) VALUES (:id, itens2 ,itens3)`;
+    const sqlInsertItens = `INSERT INTO ITENS (ID, ITEM, QTD) VALUES (:id, :item, :qtd)`;
     for (const item of itens) {
-      let bindsItem = { id: valor1, itens2 ,itens3 };
+      let bindsItem = { id: valor1, item: item.item, qtd: item.qtd };
       await connection.execute(sqlInsertItens, bindsItem, options);
     }
     console.log('Inserção em ITENS realizada com sucesso.');
