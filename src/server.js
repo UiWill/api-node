@@ -50,6 +50,10 @@ app.post('/notasteste2', async (req, res) => {
     const id = parseInt(valor1, 10);
     const valor = parseFloat(valor5);
 
+    if (isNaN(id) || isNaN(valor)) {
+      throw new Error('Valores numéricos inválidos fornecidos.');
+    }
+
     console.log(`ID convertido: ${id}`);
     console.log(`VALOR convertido: ${valor}`);
 
@@ -73,20 +77,24 @@ app.post('/notasteste2', async (req, res) => {
     await connection.execute(sqlInsertPedido, bindsPedido, options);
     console.log('Inserção em PEDIDO_PAG_SIMPLES realizada com sucesso.');
 
-    const sqlInsertItens = `INSERT INTO ITENS (ID, ITEM, QTD) VALUES (:id, :item, :qtd)`;
-    for (const item of itens) {
-      const itemQTD = parseInt(item.qtd, 10);
-      console.log(`Item: ${item.item}, QTD: ${itemQTD}`);
+    if (itens && Array.isArray(itens)) {
+      const sqlInsertItens = `INSERT INTO ITENS (ID, ITEM, QTD) VALUES (:id, :item, :qtd)`;
+      for (const item of itens) {
+        const itemQTD = parseInt(item.qtd, 10);
+        console.log(`Item: ${item.item}, QTD: ${itemQTD}`);
 
-      let bindsItem = { 
-        id: id, 
-        item: item.item, 
-        qtd: itemQTD 
-      };
-      console.log('Binds para ITENS:', bindsItem);
-      await connection.execute(sqlInsertItens, bindsItem, options);
+        let bindsItem = { 
+          id: id, 
+          item: item.item, 
+          qtd: itemQTD 
+        };
+        console.log('Binds para ITENS:', bindsItem);
+        await connection.execute(sqlInsertItens, bindsItem, options);
+      }
+      console.log('Inserção em ITENS realizada com sucesso.');
+    } else {
+      console.log('Nenhum item fornecido para inserção em ITENS.');
     }
-    console.log('Inserção em ITENS realizada com sucesso.');
 
     // Commit a transação
     await connection.commit();
