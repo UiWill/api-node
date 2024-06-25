@@ -36,7 +36,7 @@ app.get("/", (req, res) => {
 
 // Rota para o INSERT
 app.post('/notasteste2', async (req, res) => {
-  const { valor1, valor2, valor3, valor4, valor5, valor6, valor7, valor8, itens } = req.body;
+  const { valor1, valor2, valor3, valor4, valor5, valor6, valor7, valor8, item1, qtd1, item2, qtd2, item3, qtd3, item4, qtd4, item5, qtd5 } = req.body;
 
   let connection;
 
@@ -71,19 +71,27 @@ app.post('/notasteste2', async (req, res) => {
     console.log('Inserção em PEDIDO_PAG_SIMPLES realizada com sucesso.');
 
     const sqlInsertItens = `INSERT INTO ITENS (ID, ITEM, QTD) VALUES (:id, :item, :qtd)`;
-    for (const item of itens) {
-      const itemQTD = parseInt(item.qtd, 10);
-      console.log(`Item: ${item.item}, QTD: ${itemQTD}`);
 
-      let bindsItem = { 
-        id: id, 
-        item: item.item, 
-        qtd: itemQTD 
-      };
-      console.log('Binds para ITENS:', bindsItem);
-      await connection.execute(sqlInsertItens, bindsItem, options);
+    // Função para inserir item e quantidade
+    async function inserirItem(item, qtd) {
+      if (item && item.trim() !== '' && qtd && parseInt(qtd, 10) > 0) {
+        let bindsItem = { 
+          id: id, 
+          item: item, 
+          qtd: parseInt(qtd, 10) 
+        };
+        console.log('Binds para ITENS:', bindsItem);
+        await connection.execute(sqlInsertItens, bindsItem, options);
+        console.log('Inserção em ITENS realizada com sucesso.');
+      }
     }
-    console.log('Inserção em ITENS realizada com sucesso.');
+
+    // Inserir itens válidos
+    await inserirItem(item1, qtd1);
+    await inserirItem(item2, qtd2);
+    await inserirItem(item3, qtd3);
+    await inserirItem(item4, qtd4);
+    await inserirItem(item5, qtd5);
 
     // Commit a transação
     await connection.commit();
