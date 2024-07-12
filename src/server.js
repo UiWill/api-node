@@ -2,9 +2,16 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const oracledb = require('oracledb');
 const os = require('os');
+const fs = require('fs');
+const https = require('https');
 
 const app = express();
-const port = 3333;
+
+// Configuração dos caminhos para os arquivos de certificado SSL
+const options = {
+  key: fs.readFileSync('/etc/letsencrypt/live/api.dnotas.com.br/privkey.pem'),
+  cert: fs.readFileSync('/etc/letsencrypt/live/api.dnotas.com.br/fullchain.pem')
+};
 
 app.use(bodyParser.json());
 
@@ -34,14 +41,14 @@ app.get("/", (req, res) => {
   res.send("salve Alek");
 });
 
-// Rota para o INSERT
-app.post('/notasteste2', async (req, res) => {
+// Rota para o INSERT (renomeada para /tosend)
+app.post('/tosend', async (req, res) => {
   const { valor1, valor2, valor3, valor4, valor5, valor6, valor7, valor8, item1, qtd1, item2, qtd2, item3, qtd3, item4, qtd4, item5, qtd5 } = req.body;
 
   let connection;
 
   try {
-    console.log('Recebido POST /notasteste2 com dados:', req.body);
+    console.log('Recebido POST /tosend com dados:', req.body);
 
     connection = await oracledb.getConnection(dbConfig);
     console.log('Conexão com o banco de dados estabelecida com sucesso.');
@@ -117,6 +124,7 @@ app.post('/notasteste2', async (req, res) => {
   }
 });
 
-app.listen(port, () => {
-  console.log(`Servidor rodando na porta ${port}`);
+// Iniciar o servidor HTTPS na porta 443
+https.createServer(options, app).listen(443, () => {
+  console.log(`Servidor rodando com HTTPS na porta 443`);
 });
