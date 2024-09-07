@@ -43,7 +43,7 @@ app.get("/", (req, res) => {
 
 // Rota para o INSERT (renomeada para /tosend)
 app.post('/tosend', async (req, res) => {
-  const { valor1, valor2, valor3, valor4, valor5, valor6, valor7, valor8, item1, qtd1, item2, qtd2, item3, qtd3, item4, qtd4, item5, qtd5 } = req.body;
+  const { valor1, valor2, valor3, valor4, valor5, valor6, valor7, valor8, stoneCode } = req.body;
 
   let connection;
 
@@ -59,46 +59,55 @@ app.post('/tosend', async (req, res) => {
 
     console.log(`ID convertido: ${id}`);
     console.log(`VALOR convertido: ${valor}`);
+    console.log(`Stone Code: ${stoneCode}`);
 
-    const sqlInsertPedido = `INSERT INTO PEDIDO_PAG_SIMPLES (ID, MODOPAGAMENTO, PARCELAS, DATAFULL, VALOR, CAUT_YA07, TBAND_YA06, CNPJ_YA05) VALUES (:id, :modopagamento, :parcelas, :datafull, :valor, :caut_ya07, :tband_ya06, :cnpj_ya05)`;
-    let bindsPedido = { 
-      id: id, 
-      modopagamento: valor2, 
-      parcelas: valor3, 
-      datafull: valor4, 
-      valor: valor, 
-      caut_ya07: valor6, 
-      tband_ya06: valor7, 
-      cnpj_ya05: valor8 
-    };
-    const options = { autoCommit: false, outFormat: oracledb.OUT_FORMAT_OBJECT };
+    let sqlInsert = '';
+    let binds = {};
 
-    console.log('Binds para PEDIDO_PAG_SIMPLES:', bindsPedido);
-    await connection.execute(sqlInsertPedido, bindsPedido, options);
-    console.log('Inserção em PEDIDO_PAG_SIMPLES realizada com sucesso.');
-
-    const sqlInsertItens = `INSERT INTO ITENS (ID, ITEM, QTD) VALUES (:id, :item, :qtd)`;
-
-    // Função para inserir item e quantidade
-    async function inserirItem(item, qtd) {
-      if (item && item.trim() !== '' && qtd && parseInt(qtd, 10) > 0) {
-        let bindsItem = { 
+    // Verificar qual tabela será usada com base no stone code
+    switch(stoneCode) {
+      case '206192723':
+        sqlInsert = `INSERT INTO PEDIDO_PAG_SIMPLES (ID, MODOPAGAMENTO, PARCELAS, DATAFULL, VALOR, CAUT_YA07, TBAND_YA06, CNPJ_YA05) 
+                     VALUES (:id, :modopagamento, :parcelas, :datafull, :valor, :caut_ya07, :tband_ya06, :cnpj_ya05)`;
+        binds = { 
           id: id, 
-          item: item, 
-          qtd: parseInt(qtd, 10) 
+          modopagamento: valor2, 
+          parcelas: valor3, 
+          datafull: valor4, 
+          valor: valor, 
+          caut_ya07: valor6, 
+          tband_ya06: valor7, 
+          cnpj_ya05: valor8 
         };
-        console.log('Binds para ITENS:', bindsItem);
-        await connection.execute(sqlInsertItens, bindsItem, options);
-        console.log('Inserção em ITENS realizada com sucesso.');
-      }
+        break;
+      
+      // Adicionar outros "stone codes" e tabelas aqui
+      case '123456789': // Exemplo de outro stone code
+        sqlInsert = `INSERT INTO OUTRA_TABELA (ID, MODOPAGAMENTO, PARCELAS, DATAFULL, VALOR, OUTROCAMPO, MAISUMCAMPO, CNPJ) 
+                     VALUES (:id, :modopagamento, :parcelas, :datafull, :valor, :outrocampo, :maisumcampo, :cnpj)`;
+        binds = { 
+          id: id, 
+          modopagamento: valor2, 
+          parcelas: valor3, 
+          datafull: valor4, 
+          valor: valor, 
+          outrocampo: valor6, 
+          maisumcampo: valor7, 
+          cnpj: valor8 
+        };
+        break;
+
+      // Padrão para tratar stone codes não mapeados
+      default:
+        return res.status(400).json({ error: 'Stone code não mapeado.' });
     }
 
-    // Inserir itens válidos
-    await inserirItem(item1, qtd1);
-    await inserirItem(item2, qtd2);
-    await inserirItem(item3, qtd3);
-    await inserirItem(item4, qtd4);
-    await inserirItem(item5, qtd5);
+    // Executar a inserção na tabela selecionada
+    const options = { autoCommit: false, outFormat: oracledb.OUT_FORMAT_OBJECT };
+
+    console.log(`Executando inserção na tabela com stone code ${stoneCode}:`, binds);
+    await connection.execute(sqlInsert, binds, options);
+    console.log(`Inserção realizada com sucesso na tabela correspondente ao stone code ${stoneCode}.`);
 
     // Commit a transação
     await connection.commit();
