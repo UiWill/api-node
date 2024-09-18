@@ -43,7 +43,7 @@ app.get("/", (req, res) => {
 
 // Rota para o INSERT (renomeada para /tosend)
 app.post('/tosend', async (req, res) => {
-  const { valor1, valor2, valor3, valor4, valor5, valor6, valor7, valor8, stoneCode } = req.body;
+  const { valor1, valor2, valor3, valor4, valor5, valor6, valor7, valor8, stoneCode, authorizationCode  } = req.body;
 
   let connection;
 
@@ -67,8 +67,8 @@ app.post('/tosend', async (req, res) => {
     // Verificar qual tabela será usada com base no stone code
     switch(stoneCode) {
       case '206192723':
-        sqlInsert = `INSERT INTO PEDIDO_PAG_SIMPLES (ID, MODOPAGAMENTO, PARCELAS, DATAFULL, VALOR, CAUT_YA07, TBAND_YA06, CNPJ_YA05) 
-                     VALUES (:id, :modopagamento, :parcelas, :datafull, :valor, :caut_ya07, :tband_ya06, :cnpj_ya05)`;
+        sqlInsert = `INSERT INTO PEDIDO_PAG_SIMPLES (ID, MODOPAGAMENTO, PARCELAS, DATAFULL, VALOR, CAUT_YA07, TBAND_YA06, CNPJ_YA05, STONE_CODE, AUT ) 
+                     VALUES (:id, :modopagamento, :parcelas, :datafull, :valor, :caut_ya07, :tband_ya06, :cnpj_ya05, :STONE_CODE, :AUT)`;
         binds = { 
           id: id, 
           modopagamento: valor2, 
@@ -77,7 +77,9 @@ app.post('/tosend', async (req, res) => {
           valor: valor, 
           caut_ya07: valor6, 
           tband_ya06: valor7, 
-          cnpj_ya05: valor8 
+          cnpj_ya05: valor8,
+          STONE_CODE: stoneCode,
+          AUT: authorizationCode
         };
         break;
       
@@ -93,7 +95,9 @@ app.post('/tosend', async (req, res) => {
           valor: valor, 
           outrocampo: valor6, 
           maisumcampo: valor7, 
-          cnpj: valor8 
+          cnpj: valor8,
+          STONE_CODE: stoneCode,
+          AUT: authorizationCode
         };
         break;
 
