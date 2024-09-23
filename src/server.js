@@ -15,6 +15,23 @@ const options = {
 
 app.use(bodyParser.json());
 
+// Lista de Stone Codes válidos
+const validStoneCodes = ['206192723']; // Adicione seus Stone Codes válidos aqui
+
+
+// Endpoint para validar o Stone Code
+app.post('/validate-stone-code', (req, res) => {
+  const { stoneCode } = req.body;
+
+  // Verificar se o Stone Code está na lista de válidos
+  if (validStoneCodes.includes(stoneCode)) {
+    res.status(200).json({ message: 'Stone Code válido.' });
+  } else {
+    res.status(404).json({ message: 'Stone Code inválido.' });
+  }
+});  
+
+
 // Obter o caminho do Oracle Instant Client com base no sistema operacional
 let libDir = '';
 if (os.platform() === 'win32') {
