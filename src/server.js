@@ -154,15 +154,14 @@ app.post('/tosend', async (req, res) => {
   }
 });
 
-// Novo endpoint para solicitar NFC-e
 app.post('/nfc-e-solicitar', async (req, res) => {
   const { stoneCode, cpfCnpj, valor } = req.body;
 
   let connection;
-
+// NFC post
   try {
     console.log('Recebido POST /nfc-e-solicitar com dados:', req.body);
-    sqlInsert
+
     // Validação básica dos campos obrigatórios
     if (!stoneCode || !valor) {
       return res.status(400).json({ error: 'Stone Code e Valor são obrigatórios.' });
@@ -171,12 +170,18 @@ app.post('/nfc-e-solicitar', async (req, res) => {
     connection = await oracledb.getConnection(dbConfig);
     console.log('Conexão com o banco de dados estabelecida com sucesso.');
 
+    // Inicialize as variáveis
+    let sqlInsert = '';
+    let binds = {};
+
     // SQL para inserção na tabela NFC_SOLICITANTE_DNOTAS
-    const sqlInsert = `INSERT INTO NFC_SOLICITANTE_DNOTAS (STONECODE, CPF_CNPJ, VALOR)
-      VALUES (:stoneCode, :cpfCnpj, :valor)`;
+    sqlInsert = `
+      INSERT INTO NFC_SOLICITANTE_DNOTAS (STONECODE, CPF_CNPJ, VALOR)
+      VALUES (:stoneCode, :cpfCnpj, :valor)
+    `;
 
     // Bind dos valores recebidos
-    const binds = {
+    binds = {
       stoneCode: stoneCode,
       cpfCnpj: cpfCnpj || null, // Se CPF/CNPJ não for enviado, insere null
       valor: parseFloat(valor)   // Converter valor para número decimal
