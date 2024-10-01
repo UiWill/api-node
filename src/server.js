@@ -154,6 +154,61 @@ app.post('/tosend', async (req, res) => {
   }
 });
 
+// Novo endpoint para solicitar NFC-e
+app.post('/nfc-e-solicitar', async (req, res) => {
+  const { stoneCode, cpfCnpj, valor } = req.body;
+
+  let connection;
+
+  try {
+    console.log('Recebido POST /nfc-e-solicitar com dados:', req.body);
+    sqlInsert
+    // Validação básica dos campos obrigatórios
+    if (!stoneCode || !valor) {
+      return res.status(400).json({ error: 'Stone Code e Valor são obrigatórios.' });
+    }
+
+    connection = await oracledb.getConnection(dbConfig);
+    console.log('Conexão com o banco de dados estabelecida com sucesso.');
+
+    // SQL para inserção na tabela NFC_SOLICITANTE_DNOTAS
+    const sqlInsert = `INSERT INTO NFC_SOLICITANTE_DNOTAS (STONECODE, CPF_CNPJ, VALOR)
+      VALUES (:stoneCode, :cpfCnpj, :valor)`;
+
+    // Bind dos valores recebidos
+    const binds = {
+      stoneCode: stoneCode,
+      cpfCnpj: cpfCnpj || null, // Se CPF/CNPJ não for enviado, insere null
+      valor: parseFloat(valor)   // Converter valor para número decimal
+    };
+
+    const options = { autoCommit: true }; // Auto-commit da transação
+
+    // Executar a inserção
+    await connection.execute(sqlInsert, binds, options);
+    console.log('Inserção realizada com sucesso na tabela NFC_SOLICITANTE_DNOTAS.');
+
+    await connection.close();
+    console.log('Conexão com o banco de dados fechada com sucesso.');
+
+    res.status(201).json({ message: 'Solicitação de NFC-e realizada com sucesso.' });
+  } catch (err) {
+    console.error('Erro durante a execução:', err);
+
+    if (connection) {
+      try {
+        await connection.rollback();
+        console.log('Transação revertida com sucesso.');
+      } catch (rollbackErr) {
+        console.error('Erro durante o rollback:', rollbackErr);
+      }
+    }
+
+    res.status(500).json({ error: err.message });
+  }
+});
+
+
 // Iniciar o servidor HTTPS na porta 443
 https.createServer(options, app).listen(443, () => {
   console.log(`Servidor rodando com HTTPS na porta 443`);
