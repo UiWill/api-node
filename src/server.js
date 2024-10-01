@@ -50,7 +50,7 @@ oracledb.initOracleClient({ libDir });
 const dbConfig = {
   user: 'CLIENTES_CNPJ_NOVO',
   password: 'D_d2017',
-  connectString: '18.230.186.194:1521/XE'
+  connectString: '18.228.36.189:1521/XE'
 };
 
 // Rota para o SELECT
