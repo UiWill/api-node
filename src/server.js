@@ -16,7 +16,7 @@ const options = {
 app.use(bodyParser.json());
 
 // Lista de Stone Codes válidos
-const validStoneCodes = ['206192723']; // Adicione seus Stone Codes válidos aqui
+const validStoneCodes = ['206192723, 725186995']; // Adicione seus Stone Codes válidos aqui
 
 
 // Endpoint para validar o Stone Code
@@ -83,7 +83,7 @@ app.post('/tosend', async (req, res) => {
 
     // Verificar qual tabela será usada com base no stone code
     switch(stoneCode) {
-      case '206192723':
+      case '725186995':
         sqlInsert = `INSERT INTO PEDIDO_PAG_SIMPLES (ID, MODOPAGAMENTO, PARCELAS, DATAFULL, VALOR, CAUT_YA07, TBAND_YA06, CNPJ_YA05, STONE_CODE, STONE_ID ) 
                      VALUES (:id, :modopagamento, :parcelas, :datafull, :valor, :caut_ya07, :tband_ya06, :cnpj_ya05, :STONE_CODE, :AUT)`;
         binds = { 
