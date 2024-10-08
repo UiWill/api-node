@@ -16,7 +16,9 @@ const options = {
 app.use(bodyParser.json());
 
 // Lista de Stone Codes válidos
-const validStoneCodes = ['206192723, 725186995']; // Adicione seus Stone Codes válidos aqui
+// Lista de Stone Codes válidos
+const validStoneCodes = ['206192723', '725186995']; // Adicione seus Stone Codes válidos aqui
+
 
 
 // Endpoint para validar o Stone Code
