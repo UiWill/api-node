@@ -160,59 +160,119 @@ app.post('/nfc-e-solicitar', async (req, res) => {
   const { stoneCode, cpfCnpj, valor } = req.body;
 
   let connection;
-// NFC post
-  try {
-    console.log('Recebido POST /nfc-e-solicitar com dados:', req.body);
 
-    // Validação básica dos campos obrigatórios
-    if (!stoneCode || !valor) {
-      return res.status(400).json({ error: 'Stone Code e Valor são obrigatórios.' });
-    }
+ // Função para limpar CPF/CNPJ (remover caracteres especiais)
+function cleanCpfCnpj(value) {
+  return value.replace(/\D/g, ''); // Remove tudo que não for número
+}
 
-    connection = await oracledb.getConnection(dbConfig);
-    console.log('Conexão com o banco de dados estabelecida com sucesso.');
-
-    // Inicialize as variáveis
-    let sqlInsert = '';
-    let binds = {};
-
-    // SQL para inserção na tabela NFC_SOLICITANTE_DNOTAS
-    sqlInsert = `
-      INSERT INTO NFC_SOLICITANTE_DNOTAS (STONECODE, CPF_CNPJ, VALOR)
-      VALUES (:stoneCode, :cpfCnpj, :valor)
-    `;
-
-    // Bind dos valores recebidos
-    binds = {
-      stoneCode: stoneCode,
-      cpfCnpj: cpfCnpj || null, // Se CPF/CNPJ não for enviado, insere null
-      valor: parseFloat(valor)   // Converter valor para número decimal
-    };
-
-    const options = { autoCommit: true }; // Auto-commit da transação
-
-    // Executar a inserção
-    await connection.execute(sqlInsert, binds, options);
-    console.log('Inserção realizada com sucesso na tabela NFC_SOLICITANTE_DNOTAS.');
-
-    await connection.close();
-    console.log('Conexão com o banco de dados fechada com sucesso.');
-
-    res.status(201).json({ message: 'Solicitação de NFC-e realizada com sucesso.' });
-  } catch (err) {
-    console.error('Erro durante a execução:', err);
-
-    if (connection) {
-      try {
-        await connection.rollback();
-        console.log('Transação revertida com sucesso.');
-      } catch (rollbackErr) {
-        console.error('Erro durante o rollback:', rollbackErr);
-      }
-    }
-
-    res.status(500).json({ error: err.message });
+// Função para verificar se é CPF ou CNPJ
+function isCpfOrCnpj(value) {
+  const cleanValue = cleanCpfCnpj(value);
+  if (cleanValue.length === 11) {
+    return 'CPF';
+  } else if (cleanValue.length === 14) {
+    return 'CNPJ';
   }
+  return null; // Caso o valor não seja nem CPF nem CNPJ
+}
+
+// Função para validar CPF (algoritmo simplificado)
+function isValidCpf(cpf) {
+  const cleanCpf = cleanCpfCnpj(cpf);
+  if (cleanCpf.length !== 11) return false;
+  
+  // Adicione o algoritmo de validação de CPF aqui
+  // Exemplo: Validar dígitos verificadores
+  // (Este exemplo é simplificado e pode ser substituído por uma função completa de validação)
+
+  return true; // Retorne true se for válido
+}
+
+// Função para validar CNPJ (algoritmo simplificado)
+function isValidCnpj(cnpj) {
+  const cleanCnpj = cleanCpfCnpj(cnpj);
+  if (cleanCnpj.length !== 14) return false;
+
+  // Adicione o algoritmo de validação de CNPJ aqui
+  // Exemplo: Validar dígitos verificadores
+  // (Este exemplo é simplificado e pode ser substituído por uma função completa de validação)
+
+  return true; // Retorne true se for válido
+}
+
+// NFC post
+try {
+  console.log('Recebido POST /nfc-e-solicitar com dados:', req.body);
+
+  // Validação básica dos campos obrigatórios
+  if (!stoneCode || !valor) {
+    return res.status(400).json({ error: 'Stone Code e Valor são obrigatórios.' });
+  }
+
+  // Verificar CPF/CNPJ
+  const documentoTipo = isCpfOrCnpj(cpfCnpj);
+  if (!documentoTipo) {
+    return res.status(400).json({ error: 'CPF/CNPJ inválido.' });
+  }
+
+  // Validar CPF ou CNPJ
+  let isValidDocument = false;
+  if (documentoTipo === 'CPF') {
+    isValidDocument = isValidCpf(cpfCnpj);
+  } else if (documentoTipo === 'CNPJ') {
+    isValidDocument = isValidCnpj(cpfCnpj);
+  }
+
+  if (!isValidDocument) {
+    return res.status(400).json({ error: `${documentoTipo} inválido.` });
+  }
+
+  connection = await oracledb.getConnection(dbConfig);
+  console.log('Conexão com o banco de dados estabelecida com sucesso.');
+
+  // Inicialize as variáveis
+  let sqlInsert = '';
+  let binds = {};
+
+  // SQL para inserção na tabela NFC_SOLICITANTE_DNOTAS
+  sqlInsert = `
+    INSERT INTO NFC_SOLICITANTE_DNOTAS (STONECODE, CPF_CNPJ, VALOR)
+    VALUES (:stoneCode, :cpfCnpj, :valor)
+  `;
+
+  // Bind dos valores recebidos
+  binds = {
+    stoneCode: stoneCode,
+    cpfCnpj: cpfCnpj || null, // Se CPF/CNPJ não for enviado, insere null
+    valor: parseFloat(valor)   // Converter valor para número decimal
+  };
+
+  const options = { autoCommit: true }; // Auto-commit da transação
+
+  // Executar a inserção
+  await connection.execute(sqlInsert, binds, options);
+  console.log('Inserção realizada com sucesso na tabela NFC_SOLICITANTE_DNOTAS.');
+
+  await connection.close();
+  console.log('Conexão com o banco de dados fechada com sucesso.');
+
+  res.status(201).json({ message: 'Solicitação de NFC-e realizada com sucesso.' });
+} catch (err) {
+  console.error('Erro durante a execução:', err);
+
+  if (connection) {
+    try {
+      await connection.rollback();
+      console.log('Transação revertida com sucesso.');
+    } catch (rollbackErr) {
+      console.error('Erro durante o rollback:', rollbackErr);
+    }
+  }
+
+  res.status(500).json({ error: err.message });
+}
+
 });
 
 
