@@ -19,6 +19,95 @@ app.use(bodyParser.json());
 // Lista de Stone Codes válidos
 const validStoneCodes = ['206192723', '725186995']; // Adicione seus Stone Codes válidos aqui
 
+// Função para validar CPF (com algoritmo completo)
+function ValidacaoCPF(CPF) {
+  if (CPF === "00000000000" || CPF === "11111111111" || CPF === "22222222222" ||
+      CPF === "33333333333" || CPF === "44444444444" || CPF === "55555555555" ||
+      CPF === "66666666666" || CPF === "77777777777" || CPF === "88888888888" ||
+      CPF === "99999999999" || CPF.length !== 11) {
+    return false;
+  }
+  let dig10, dig11, sm, i, r, num, peso;
+  try {
+    sm = 0;
+    peso = 10;
+    for (i = 0; i < 9; i++) {
+      num = parseInt(CPF.charAt(i), 10);
+      sm += num * peso;
+      peso--;
+    }
+    r = 11 - (sm % 11);
+    dig10 = (r === 10 || r === 11) ? '0' : String.fromCharCode(r + 48);
+
+    sm = 0;
+    peso = 11;
+    for (i = 0; i < 10; i++) {
+      num = parseInt(CPF.charAt(i), 10);
+      sm += num * peso;
+      peso--;
+    }
+    r = 11 - (sm % 11);
+    dig11 = (r === 10 || r === 11) ? '0' : String.fromCharCode(r + 48);
+
+    return (dig10 === CPF.charAt(9)) && (dig11 === CPF.charAt(10));
+  } catch (error) {
+    return false;
+  }
+}
+
+// Função para validar CNPJ (com algoritmo completo)
+function ValidacaoCNPJ(CNPJ) {
+  if (CNPJ === "00000000000000" || CNPJ === "11111111111111" ||
+      CNPJ === "22222222222222" || CNPJ === "33333333333333" ||
+      CNPJ === "44444444444444" || CNPJ === "55555555555555" ||
+      CNPJ === "66666666666666" || CNPJ === "77777777777777" ||
+      CNPJ === "88888888888888" || CNPJ === "99999999999999" || CNPJ.length !== 14) {
+    return false;
+  }
+  let dig13, dig14, sm, i, r, num, peso;
+  try {
+    sm = 0;
+    peso = 2;
+    for (i = 11; i >= 0; i--) {
+      num = parseInt(CNPJ.charAt(i), 10);
+      sm += num * peso;
+      peso = (peso === 9) ? 2 : peso + 1;
+    }
+    r = sm % 11;
+    dig13 = (r === 0 || r === 1) ? '0' : String.fromCharCode((11 - r) + 48);
+
+    sm = 0;
+    peso = 2;
+    for (i = 12; i >= 0; i--) {
+      num = parseInt(CNPJ.charAt(i), 10);
+      sm += num * peso;
+      peso = (peso === 9) ? 2 : peso + 1;
+    }
+    r = sm % 11;
+    dig14 = (r === 0 || r === 1) ? '0' : String.fromCharCode((11 - r) + 48);
+
+    return (dig13 === CNPJ.charAt(12)) && (dig14 === CNPJ.charAt(13));
+  } catch (error) {
+    return false;
+  }
+}
+
+// Função para limpar CPF/CNPJ (remover caracteres especiais)
+function cleanCpfCnpj(value) {
+  return value.replace(/\D/g, ''); // Remove tudo que não for número
+}
+
+// Função para verificar se é CPF ou CNPJ
+function isCpfOrCnpj(value) {
+  const cleanValue = cleanCpfCnpj(value);
+  if (cleanValue.length === 11) {
+    return 'CPF';
+  } else if (cleanValue.length === 14) {
+    return 'CNPJ';
+  }
+  return null; // Caso o valor não seja nem CPF nem CNPJ
+}
+
 
 
 // Endpoint para validar o Stone Code
@@ -161,119 +250,108 @@ app.post('/nfc-e-solicitar', async (req, res) => {
 
   let connection;
 
- // Função para limpar CPF/CNPJ (remover caracteres especiais)
-function cleanCpfCnpj(value) {
-  return value.replace(/\D/g, ''); // Remove tudo que não for número
-}
-
-// Função para verificar se é CPF ou CNPJ
-function isCpfOrCnpj(value) {
-  const cleanValue = cleanCpfCnpj(value);
-  if (cleanValue.length === 11) {
-    return 'CPF';
-  } else if (cleanValue.length === 14) {
-    return 'CNPJ';
-  }
-  return null; // Caso o valor não seja nem CPF nem CNPJ
-}
-
-// Função para validar CPF (algoritmo simplificado)
-function isValidCpf(cpf) {
-  const cleanCpf = cleanCpfCnpj(cpf);
-  if (cleanCpf.length !== 11) return false;
-  
-  // Adicione o algoritmo de validação de CPF aqui
-  // Exemplo: Validar dígitos verificadores
-  // (Este exemplo é simplificado e pode ser substituído por uma função completa de validação)
-
-  return true; // Retorne true se for válido
-}
-
-// Função para validar CNPJ (algoritmo simplificado)
-function isValidCnpj(cnpj) {
-  const cleanCnpj = cleanCpfCnpj(cnpj);
-  if (cleanCnpj.length !== 14) return false;
-
-  // Adicione o algoritmo de validação de CNPJ aqui
-  // Exemplo: Validar dígitos verificadores
-  // (Este exemplo é simplificado e pode ser substituído por uma função completa de validação)
-
-  return true; // Retorne true se for válido
-}
-
-// NFC post
-try {
-  console.log('Recebido POST /nfc-e-solicitar com dados:', req.body);
-
-  // Validação básica dos campos obrigatórios
-  if (!stoneCode || !valor) {
-    return res.status(400).json({ error: 'Stone Code e Valor são obrigatórios.' });
+  // Função para limpar CPF/CNPJ (remover caracteres especiais)
+  function cleanCpfCnpj(value) {
+    return value.replace(/\D/g, ''); // Remove tudo que não for número
   }
 
-  // Verificar CPF/CNPJ
-  const documentoTipo = isCpfOrCnpj(cpfCnpj);
-  if (!documentoTipo) {
-    return res.status(400).json({ error: 'CPF/CNPJ inválido.' });
-  }
-
-  // Validar CPF ou CNPJ
-  let isValidDocument = false;
-  if (documentoTipo === 'CPF') {
-    isValidDocument = isValidCpf(cpfCnpj);
-  } else if (documentoTipo === 'CNPJ') {
-    isValidDocument = isValidCnpj(cpfCnpj);
-  }
-
-  if (!isValidDocument) {
-    return res.status(400).json({ error: `${documentoTipo} inválido.` });
-  }
-
-  connection = await oracledb.getConnection(dbConfig);
-  console.log('Conexão com o banco de dados estabelecida com sucesso.');
-
-  // Inicialize as variáveis
-  let sqlInsert = '';
-  let binds = {};
-
-  // SQL para inserção na tabela NFC_SOLICITANTE_DNOTAS
-  sqlInsert = `
-    INSERT INTO NFC_SOLICITANTE_DNOTAS (STONECODE, CPF_CNPJ, VALOR)
-    VALUES (:stoneCode, :cpfCnpj, :valor)
-  `;
-
-  // Bind dos valores recebidos
-  binds = {
-    stoneCode: stoneCode,
-    cpfCnpj: cpfCnpj || null, // Se CPF/CNPJ não for enviado, insere null
-    valor: parseFloat(valor)   // Converter valor para número decimal
-  };
-
-  const options = { autoCommit: true }; // Auto-commit da transação
-
-  // Executar a inserção
-  await connection.execute(sqlInsert, binds, options);
-  console.log('Inserção realizada com sucesso na tabela NFC_SOLICITANTE_DNOTAS.');
-
-  await connection.close();
-  console.log('Conexão com o banco de dados fechada com sucesso.');
-
-  res.status(201).json({ message: 'Solicitação de NFC-e realizada com sucesso.' });
-} catch (err) {
-  console.error('Erro durante a execução:', err);
-
-  if (connection) {
-    try {
-      await connection.rollback();
-      console.log('Transação revertida com sucesso.');
-    } catch (rollbackErr) {
-      console.error('Erro durante o rollback:', rollbackErr);
+  // Função para verificar se é CPF ou CNPJ
+  function isCpfOrCnpj(value) {
+    const cleanValue = cleanCpfCnpj(value);
+    if (cleanValue.length === 11) {
+      return 'CPF';
+    } else if (cleanValue.length === 14) {
+      return 'CNPJ';
     }
+    return null; // Caso o valor não seja nem CPF nem CNPJ
   }
 
-  res.status(500).json({ error: err.message });
-}
+  // Função para validar CPF (algoritmo simplificado)
+  function isValidCpf(cpf) {
+    const cleanCpf = cleanCpfCnpj(cpf);
+    if (cleanCpf.length !== 11) return false;
+    
+    // Adicione o algoritmo de validação de CPF aqui
+    return true; // Retorne true se for válido
+  }
 
+  // Função para validar CNPJ (algoritmo simplificado)
+  function isValidCnpj(cnpj) {
+    const cleanCnpj = cleanCpfCnpj(cnpj);
+    if (cleanCnpj.length !== 14) return false;
+
+    // Adicione o algoritmo de validação de CNPJ aqui
+    return true; // Retorne true se for válido
+  }
+
+  try {
+    console.log('Recebido POST /nfc-e-solicitar com dados:', req.body);
+
+    // Validação básica dos campos obrigatórios
+    if (!stoneCode || !valor) {
+      return res.status(400).json({ error: 'Stone Code e Valor são obrigatórios.' });
+    }
+
+    // Verificar CPF/CNPJ
+    const documentoTipo = isCpfOrCnpj(cpfCnpj);
+    if (!documentoTipo) {
+      return res.status(400).json({ error: 'CPF/CNPJ inválido.' });
+    }
+
+    // Validar CPF ou CNPJ
+    let isValidDocument = false;
+    if (documentoTipo === 'CPF') {
+      isValidDocument = isValidCpf(cpfCnpj);
+    } else if (documentoTipo === 'CNPJ') {
+      isValidDocument = isValidCnpj(cpfCnpj);
+    }
+
+    if (!isValidDocument) {
+      return res.status(400).json({ error: `${documentoTipo} inválido.` });
+    }
+
+    connection = await oracledb.getConnection(dbConfig);
+    console.log('Conexão com o banco de dados estabelecida com sucesso.');
+
+    // SQL para inserção na tabela NFC_SOLICITANTE_DNOTAS
+    const sqlInsert = `
+      INSERT INTO NFC_SOLICITANTE_DNOTAS (STONECODE, CPF_CNPJ, VALOR)
+      VALUES (:stoneCode, :cpfCnpj, :valor)
+    `;
+
+    // Bind dos valores recebidos
+    const binds = {
+      stoneCode: stoneCode,
+      cpfCnpj: cpfCnpj || null, // Se CPF/CNPJ não for enviado, insere null
+      valor: parseFloat(valor)   // Converter valor para número decimal
+    };
+
+    const options = { autoCommit: true }; // Auto-commit da transação
+
+    // Executar a inserção
+    await connection.execute(sqlInsert, binds, options);
+    console.log('Inserção realizada com sucesso na tabela NFC_SOLICITANTE_DNOTAS.');
+
+    await connection.close();
+    console.log('Conexão com o banco de dados fechada com sucesso.');
+
+    res.status(201).json({ message: 'Solicitação de NFC-e realizada com sucesso.' });
+  } catch (err) {
+    console.error('Erro durante a execução:', err);
+
+    if (connection) {
+      try {
+        await connection.rollback();
+        console.log('Transação revertida com sucesso.');
+      } catch (rollbackErr) {
+        console.error('Erro durante o rollback:', rollbackErr);
+      }
+    }
+
+    res.status(500).json({ error: err.message });
+  }
 });
+
 
 
 // Iniciar o servidor HTTPS na porta 443
